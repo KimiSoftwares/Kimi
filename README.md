@@ -1,0 +1,23 @@
+Kimi
+Kimi is an open source web utility created to provide a streamlined and ad-free streaming experience for YouTube. The platform features a clean interface with multi-tab navigation, custom video and track loading, integrated history logging, and customizable background particle animations. The project is built using standard web technologies including HTML, Tailwind CSS, and client-side JavaScript, ensuring it remains lightweight and accessible.
+
+Features
+The Stream Player uses optimized embedding methods to bypass standard YouTube advertisements and recommendation clutter, allowing for a focused viewing experience.
+
+The Spotify Player enables users to load tracks, albums, or playlists using direct share links through an integrated container.
+
+History Tracking automatically records previously played streams and loaded Spotify tracks, allowing users to review and replay past media instantly from dedicated history sections.
+
+Platform Settings include customizable controls for the background particle effects, letting users toggle visual animations on or off according to their preferences.
+
+The Changelog Dashboard provides a complete chronological record of version releases and updates tracking the development of the platform.
+
+Important Usage Information
+For the Spotify integration, please note that you must be signed in to your personal Spotify account within the player to listen to full-length songs and access your private playlists. If you are not signed in, Spotify will restrict playback to thirty-second previews.
+
+Kimi successfully bypasses advertisements on YouTube; however, we cannot guarantee an ad-free experience on Spotify. Because Spotify embeds are served directly by their servers, ad delivery depends on your specific account status or the use of external browser-based ad-blocking extensions.
+
+Due to browser security policies, loaded tracks and replay actions cannot start automatically. You will need to click the play button manually to begin playback.
+
+Security and Development
+Kimi is safe and fully open source. You are encouraged to view, learn from, and suggest improvements to the codebase. To run or modify the project locally, clone the repository and open the index file in any modern web browser. No complex build steps or backend servers are required.
