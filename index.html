@@ -543,6 +543,7 @@
                 const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(rawUrl)}`);
                 const data = await res.json();
                 if (data.title) trackTitle = data.title;
+                if (data.author_name) artistName = data.author_name;
                 if (data.thumbnail_url) thumbnailURL = data.thumbnail_url;
             } catch (e) {
                 if (rawUrl.includes('/track/')) {
@@ -554,7 +555,7 @@
                 }
             }
 
-            // Update Spotify Active Banner UI with Kimi Admin support
+            // Update Spotify Active Banner UI with admin badge support
             const banner = document.getElementById('spotify-active-media-banner');
             const bannerThumb = document.getElementById('spotify-banner-thumb');
             const bannerTitle = document.getElementById('spotify-banner-title');
@@ -652,7 +653,7 @@
                         <h4 class="text-sm font-medium text-zinc-900 truncate">${item.title}</h4>
                         <div class="flex items-center space-x-1.5 mt-0.5">
                             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
-                            <p class="text-xs font-medium text-purple-700">Kimi Admin • ${item.time}</p>
+                            <p class="text-xs font-medium text-purple-700">${item.artist} • ${item.time}</p>
                         </div>
                     </div>
                     <button onclick="playSpotifyByUrl('${item.embedUrl}', '${item.rawUrl}')" class="bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-3.5 py-2 rounded-xl text-xs font-medium transition-all shrink-0">
@@ -663,7 +664,7 @@
             lucide.createIcons();
         }
 
-        // Particle Canvas Animation Logic (Increased particle density to 120)
+        // Particle Canvas Animation Logic (Increased Density)
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -676,14 +677,15 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        // Increased particle count from 40 to 120 for a much denser background effect
         for (let i = 0; i < 120; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                radius: Math.random() * 2.2 + 0.8,
-                speedY: -(Math.random() * 0.5 + 0.2),
-                speedX: (Math.random() - 0.5) * 0.4,
-                opacity: Math.random() * 0.6 + 0.2
+                radius: Math.random() * 2 + 1,
+                speedY: -(Math.random() * 0.4 + 0.2),
+                speedX: (Math.random() - 0.5) * 0.3,
+                opacity: Math.random() * 0.5 + 0.2
             });
         }
 
