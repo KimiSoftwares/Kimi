@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="flex-1 pb-32">
         <!-- Topbar UI -->
         <header class="w-full max-w-7xl mx-auto mt-4 px-4 md:px-6 relative z-20">
             <div class="bg-white border border-zinc-200 px-4 md:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between rounded-2xl shadow-sm relative gap-3 md:gap-0">
@@ -174,7 +174,7 @@
             </section>
 
             <!-- Stream Content -->
-            <section id="content-stream" class="tab-content hidden space-y-6 pb-40">
+            <section id="content-stream" class="tab-content hidden space-y-6">
                 <div class="border-b border-zinc-200 pb-4">
                     <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Stream Player</h1>
                     <p class="text-sm text-zinc-500 mt-1">Paste a YouTube link below to watch videos without advertisements.</p>
@@ -221,7 +221,7 @@
             </section>
 
             <!-- Spotify Content -->
-            <section id="content-spotify" class="tab-content hidden space-y-6 pb-40">
+            <section id="content-spotify" class="tab-content hidden space-y-6">
                 <div class="border-b border-zinc-200 pb-4">
                     <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Spotify Player</h1>
                     <p class="text-sm text-zinc-500 mt-1">Paste a Spotify track, album, or playlist link to listen seamlessly.</p>
@@ -291,7 +291,7 @@
             </section>
 
             <!-- History Content -->
-            <section id="content-history" class="tab-content hidden space-y-8 pb-32">
+            <section id="content-history" class="tab-content hidden space-y-8">
                 <!-- Stream History Subsection -->
                 <div class="space-y-4">
                     <div class="border-b border-zinc-200 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
@@ -416,6 +416,7 @@
                 document.getElementById('content-settings').classList.remove('hidden');
                 document.getElementById('btn-settings').className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0";
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // Initialize history from localStorage or default to empty arrays
