@@ -3,721 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kimi Ad-Free</title>
+    <title>Kimi Chat Hub</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Responsive scaling: 79% zoom on desktop/tablet, full scale on mobile to preserve layout integrity */
         body {
-            background-color: #ffffff;
-            overflow-x: hidden;
-        }
-
-        @media (min-width: 768px) {
-            body {
-                zoom: 79%;
-            }
-        }
-
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
         }
     </style>
 </head>
-<body class="text-zinc-800 font-sans min-h-screen relative flex flex-col justify-between">
+<body class="min-h-screen flex flex-col justify-between">
 
-    <!-- Interactive Particle Canvas Layer -->
-    <canvas id="particle-canvas"></canvas>
-
-    <!-- Announcement Popup Modal -->
-    <div id="announcement-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 backdrop-blur-sm p-4">
-        <div class="bg-white border border-zinc-200 p-6 max-w-lg w-full rounded-2xl shadow-xl space-y-4 relative z-25">
-            <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <div class="flex items-center space-x-3 text-zinc-900">
-                    <i data-lucide="megaphone" class="w-6 h-6 text-purple-600"></i>
-                    <h2 class="text-lg font-semibold">Announcement</h2>
-                </div>
-                <button 
-                    onclick="closeAnnouncement()" 
-                    class="text-zinc-400 hover:text-zinc-700 bg-transparent p-1.5 transition-all">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            
-            <div class="text-sm text-zinc-600 space-y-3 leading-relaxed max-h-60 overflow-y-auto pr-3">
-                <p class="font-medium text-zinc-900">Welcome to Kimi.</p>
-                <p>This platform was built from scratch over hours of collaborative coding to provide a seamless, secure, and completely ad-free streaming experience for YouTube without unnecessary clutter.</p>
-                <p>Spotify streaming is also included, though we are still testing whether advertisements are successfully bypassed on loaded tracks.</p>
-                <p>All listened songs and watched streams now save automatically to local storage and persist across sessions so your history never erases.</p>
-                <p>The platform remains free, stable, and equipped with essential features including history logs, cross-platform link redirection, and customizable particle effects.</p>
-                <p>Please check back frequently for new software releases and version patches. You can close this announcement window using the button below and check the dashboard section at any time for complete changelogs.</p>
-                <p class="font-medium text-purple-700 bg-purple-50 p-3 rounded-xl border border-purple-200">
-                    Exciting News: We are currently developing a local storage sign up and login system. Please remember not to clear your browser data so your accounts and history remain saved.
-                </p>
-            </div>
-
-            <div class="flex items-center justify-between pt-3 border-t border-zinc-100">
-                <span class="text-xs text-purple-700 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg font-medium flex items-center space-x-1.5">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
-                    <span>Kimi Admin</span>
-                </span>
-                <button 
-                    onclick="closeAnnouncement()" 
-                    class="bg-purple-600 text-white font-medium px-5 py-2 text-sm rounded-xl hover:bg-purple-700 transition-all shadow-sm">
-                    Got it
-                </button>
-            </div>
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Kimi Chat Hub</span>
         </div>
-    </div>
+        <div id="user-menu" class="hidden flex items-center space-x-4">
+            <span id="current-username" class="text-sm text-slate-300 font-medium"></span>
+            <button onclick="logout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded-lg transition">Logout</button>
+        </div>
+    </header>
 
-    <div class="flex-1 pb-32">
-        <!-- Topbar UI -->
-        <header class="w-full max-w-7xl mx-auto mt-4 px-4 md:px-6 relative z-20">
-            <div class="bg-white border border-zinc-200 px-4 md:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between rounded-2xl shadow-sm relative gap-3 md:gap-0">
-                
-                <!-- Left: Brand / Title -->
-                <div class="flex items-center justify-between w-full md:w-auto">
-                    <span class="text-xl font-bold tracking-tight text-zinc-900">Kimi</span>
-                </div>
+    <!-- Main Container -->
+    <main class="flex-1 flex items-center justify-center p-4">
 
-                <!-- Center: Navigation Tabs (Scrollable on mobile) -->
-                <nav class="flex space-x-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 md:absolute md:left-1/2 md:-translate-x-1/2 scrollbar-none">
-                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0">
-                        <i data-lucide="home" class="w-4 h-4"></i>
-                        <span>Dashboard</span>
-                    </button>
-
-                    <button onclick="switchTab('stream')" id="btn-stream" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl border border-transparent transition-all shrink-0">
-                        <i data-lucide="play" class="w-4 h-4"></i>
-                        <span>Stream</span>
-                    </button>
-
-                    <button onclick="switchTab('spotify')" id="btn-spotify" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl border border-transparent transition-all shrink-0">
-                        <i data-lucide="music" class="w-4 h-4"></i>
-                        <span>Spotify</span>
-                    </button>
-
-                    <button onclick="switchTab('history')" id="btn-history" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl border border-transparent transition-all shrink-0">
-                        <i data-lucide="history" class="w-4 h-4"></i>
-                        <span>History</span>
-                    </button>
-
-                    <button onclick="switchTab('settings')" id="btn-settings" class="tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl border border-transparent transition-all shrink-0">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
-                        <span>Settings</span>
-                    </button>
-                </nav>
-
-                <!-- Right Spacer for Desktop Alignment Balance -->
-                <div class="hidden md:block w-12"></div>
+        <!-- AUTH SCREEN (Login / Register) -->
+        <div id="auth-screen" class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+            <div class="flex border-b border-slate-800 mb-6">
+                <button id="tab-login" onclick="switchTab('login')" class="flex-1 pb-3 text-center font-semibold text-indigo-400 border-b-2 border-indigo-500 transition">Login</button>
+                <button id="tab-register" onclick="switchTab('register')" class="flex-1 pb-3 text-center font-semibold text-slate-400 border-b-2 border-transparent transition">Register</button>
             </div>
-        </header>
 
-        <!-- Main Content Area -->
-        <main class="p-4 md:p-6 max-w-7xl mx-auto relative z-20">
-            
-            <!-- Dashboard Content -->
-            <section id="content-dashboard" class="tab-content space-y-6">
-                <div class="border-b border-zinc-200 pb-4">
-                    <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Dashboard and Version History</h1>
-                    <p class="text-sm text-zinc-500 mt-1">A complete chronological changelog tracking hours of collaborative development from initial foundation to the latest release.</p>
+            <!-- Login Form -->
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Username</label>
+                    <input type="text" id="login-user" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
                 </div>
-
-                <div class="space-y-4">
-                    <!-- Version 1.5 / July 29, 2026 Release -->
-                    <div class="bg-white border border-zinc-200 p-5 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <h2 class="text-lg font-medium text-zinc-900">Version 1.5 Release</h2>
-                            <span class="text-xs text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg font-mono">Current (July 29, 2026 / 7/29/26)</span>
-                        </div>
-                        <p class="text-sm text-zinc-600 mb-3">Minor update focused on resolving software bugs, implementing persistent local storage history, and laying the groundwork for upcoming sign up and login systems.</p>
-                        <div class="bg-zinc-50 border border-zinc-200 p-3 rounded-xl text-xs text-zinc-600 space-y-1.5">
-                            <p class="font-medium text-zinc-800">Changelog Summary:</p>
-                            <p><span class="text-emerald-600 font-semibold">[Added and Improved]</span> Local storage integration for permanent stream and track history retention, bug fixes, and preparation for user authentication features.</p>
-                        </div>
-                    </div>
-
-                    <!-- Version 1.3 / July 28, 2026 Release -->
-                    <div class="bg-white border border-zinc-200 p-5 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <h2 class="text-lg font-medium text-zinc-900">Version 1.3 Release</h2>
-                            <span class="text-xs text-zinc-500 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded-lg font-mono">July 28, 2026 / 7/28/26</span>
-                        </div>
-                        <p class="text-sm text-zinc-600 mb-3">Major update containing bug fixes, general performance improvements, and many new features.</p>
-                        <div class="bg-zinc-50 border border-zinc-200 p-3 rounded-xl text-xs text-zinc-600 space-y-1.5">
-                            <p class="font-medium text-zinc-800">Changelog Summary:</p>
-                            <p><span class="text-emerald-600 font-semibold">[Added]</span> Multi-tab navigation, YouTube iframe embeds, Spotify integration, history logs, particle controls, and responsive UI scaling.</p>
-                        </div>
-                    </div>
-
-                    <!-- Version 1.1 / July 27, 2026 Release -->
-                    <div class="bg-white border border-zinc-200 p-5 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <h2 class="text-lg font-medium text-zinc-900">Version 1.1 Release</h2>
-                            <span class="text-xs text-zinc-500 bg-zinc-100 border border-zinc-200 px-2.5 py-1 rounded-lg font-mono">July 27, 2026 / 7/27/26</span>
-                        </div>
-                        <p class="text-sm text-zinc-600 mb-3">Initial project foundation.</p>
-                        <div class="bg-zinc-50 border border-zinc-200 p-3 rounded-xl text-xs text-zinc-600 space-y-1.5">
-                            <p class="font-medium text-zinc-800">Changelog Summary:</p>
-                            <p><span class="text-emerald-600 font-semibold">[Added]</span> Project initialization and base application structure.</p>
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                    <input type="password" id="login-pass" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
                 </div>
-            </section>
+                <p id="login-error" class="text-rose-500 text-xs hidden"></p>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition">Login</button>
+            </form>
 
-            <!-- Stream Content -->
-            <section id="content-stream" class="tab-content hidden space-y-6">
-                <div class="border-b border-zinc-200 pb-4">
-                    <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Stream Player</h1>
-                    <p class="text-sm text-zinc-500 mt-1">Paste a YouTube link below to watch videos without advertisements.</p>
+            <!-- Register Form -->
+            <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Choose Username</label>
+                    <input type="text" id="reg-user" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
                 </div>
-
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <div class="relative flex-1">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-zinc-400">
-                            <i data-lucide="link" class="w-4 h-4"></i>
-                        </span>
-                        <input 
-                            type="text" 
-                            id="video-url-input" 
-                            placeholder="Paste YouTube URL here..." 
-                            class="w-full bg-white border border-zinc-200 text-zinc-900 text-sm pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all shadow-sm"
-                        >
-                    </div>
-                    <button 
-                        onclick="loadCustomVideo()" 
-                        class="bg-purple-600 text-white font-medium px-6 py-3 text-sm rounded-xl hover:bg-purple-700 transition-all shadow-sm flex items-center justify-center space-x-2 shrink-0">
-                        <i data-lucide="play" class="w-4 h-4 fill-white"></i>
-                        <span>Load Stream</span>
-                    </button>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">Choose Password</label>
+                    <input type="password" id="reg-pass" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
                 </div>
+                <p id="reg-error" class="text-rose-500 text-xs hidden"></p>
+                <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 rounded-lg transition">Create Account</button>
+            </form>
+        </div>
 
-                <!-- YouTube Active Song/Video Banner Info -->
-                <div id="active-media-banner" class="hidden bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm flex items-center space-x-4">
-                    <img id="banner-thumb" src="" alt="Thumbnail" class="w-24 h-16 object-cover rounded-xl border border-zinc-100 shrink-0">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-2 mb-1">
-                            <span class="text-[10px] uppercase tracking-wider font-semibold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded">Now Playing</span>
-                        </div>
-                        <h3 id="banner-title" class="text-sm font-semibold text-zinc-900 truncate">Song Title</h3>
-                        <p id="banner-creator" class="text-xs text-zinc-500 truncate mt-0.5">Creator Name</p>
-                    </div>
-                </div>
+        <!-- CHAT SCREEN -->
+        <div id="chat-screen" class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[75vh] shadow-xl hidden">
+            <!-- Message List -->
+            <div id="message-container" class="flex-1 p-4 overflow-y-auto space-y-3">
+                <!-- Dynamic messages populate here -->
+            </div>
 
-                <div id="player-container" class="relative w-full aspect-video bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center">
-                    <div id="empty-state" class="text-center text-zinc-400 p-6">
-                        <i data-lucide="video-off" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                        <p class="text-sm">No stream loaded. Paste a link above to begin.</p>
-                    </div>
-                </div>
-            </section>
+            <!-- Message Input Form -->
+            <form onsubmit="handleSendMessage(event)" class="p-3 bg-slate-900/50 border-t border-slate-800 flex gap-2">
+                <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" required class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition">Send</button>
+            </form>
+        </div>
 
-            <!-- Spotify Content -->
-            <section id="content-spotify" class="tab-content hidden space-y-6">
-                <div class="border-b border-zinc-200 pb-4">
-                    <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Spotify Player</h1>
-                    <p class="text-sm text-zinc-500 mt-1">Paste a Spotify track, album, or playlist link to listen seamlessly.</p>
-                </div>
+    </main>
 
-                <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl flex items-start space-x-3 text-purple-900">
-                    <i data-lucide="info" class="w-5 h-5 text-purple-600 shrink-0 mt-0.5"></i>
-                    <div class="text-xs md:text-sm leading-relaxed">
-                        <span class="font-semibold block mb-0.5">Playback Notice</span>
-                        Due to browser security policies, loaded tracks and replay actions cannot start automatically. You will need to click the play button manually to begin playback.
-                    </div>
-                </div>
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-800">
+        Kimi Chat Hub &bull; LocalStorage Powered
+    </footer>
 
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <div class="relative flex-1">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-zinc-400">
-                            <i data-lucide="music" class="w-4 h-4"></i>
-                        </span>
-                        <input 
-                            type="text" 
-                            id="spotify-url-input" 
-                            placeholder="Paste Spotify track or playlist URL here..." 
-                            class="w-full bg-white border border-zinc-200 text-zinc-900 text-sm pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-all shadow-sm"
-                        >
-                    </div>
-                    <button 
-                        onclick="loadCustomSpotify()" 
-                        class="bg-purple-600 text-white font-medium px-6 py-3 text-sm rounded-xl hover:bg-purple-700 transition-all shadow-sm flex items-center justify-center space-x-2 shrink-0">
-                        <i data-lucide="play" class="w-4 h-4 fill-white"></i>
-                        <span>Load Track</span>
-                    </button>
-                </div>
-
-                <!-- Spotify Active Song Banner Info -->
-                <div id="spotify-active-media-banner" class="hidden bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm flex items-center space-x-4">
-                    <img id="spotify-banner-thumb" src="" alt="Thumbnail" class="w-24 h-16 object-cover rounded-xl border border-zinc-100 shrink-0">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-2 mb-1">
-                            <span class="text-[10px] uppercase tracking-wider font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded">Now Playing Spotify</span>
-                        </div>
-                        <h3 id="spotify-banner-title" class="text-sm font-semibold text-zinc-900 truncate">Song Title</h3>
-                        <div id="spotify-banner-creator-wrapper" class="flex items-center space-x-1.5 mt-0.5">
-                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
-                            <p id="spotify-banner-creator" class="text-xs font-medium text-purple-700">Kimi Admin</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="spotify-player-container" class="relative w-full h-[380px] bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center">
-                    <div id="spotify-empty-state" class="text-center text-zinc-400 p-6">
-                        <i data-lucide="music-2" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                        <p class="text-sm">No Spotify track loaded. Paste a link above to begin.</p>
-                    </div>
-                    <iframe 
-                        id="spotify-iframe"
-                        class="hidden"
-                        style="border-radius:12px" 
-                        src="" 
-                        width="100%" 
-                        height="100%" 
-                        frameBorder="0" 
-                        allowfullscreen="" 
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                        loading="lazy">
-                    </iframe>
-                </div>
-            </section>
-
-            <!-- History Content -->
-            <section id="content-history" class="tab-content hidden space-y-8">
-                <!-- Stream History Subsection -->
-                <div class="space-y-4">
-                    <div class="border-b border-zinc-200 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-                        <div>
-                            <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Stream History</h1>
-                            <p class="text-sm text-zinc-500 mt-1">Review previously watched videos and replay them instantly.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span id="history-count-badge" class="text-xs text-purple-700 bg-purple-50 border border-purple-200 px-3 py-1 rounded-lg font-medium w-fit">0 streams logged</span>
-                            <button onclick="clearHistory('stream')" class="text-xs text-zinc-500 hover:text-red-600 bg-zinc-100 hover:bg-red-50 border border-zinc-200 hover:border-red-200 px-3 py-1 rounded-lg transition-all">Clear Stream History</button>
-                        </div>
-                    </div>
-
-                    <div id="history-full-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="col-span-full bg-white border border-zinc-200 p-12 rounded-2xl text-center text-zinc-400 shadow-sm">
-                            <i data-lucide="history" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                            <p class="text-sm font-medium">No history recorded yet.</p>
-                            <p class="text-xs text-zinc-400 mt-1">Watched streams will appear here automatically.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spotify History Subsection -->
-                <div class="space-y-4 pt-4">
-                    <div class="border-b border-zinc-200 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-                        <div>
-                            <h2 class="text-xl font-semibold tracking-tight text-zinc-900">Spotify History</h2>
-                            <p class="text-sm text-zinc-500 mt-1">Review previously loaded Spotify tracks and playlists.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span id="spotify-history-count-badge" class="text-xs text-purple-700 bg-purple-50 border border-purple-200 px-3 py-1 rounded-lg font-medium w-fit">0 tracks logged</span>
-                            <button onclick="clearHistory('spotify')" class="text-xs text-zinc-500 hover:text-red-600 bg-zinc-100 hover:bg-red-50 border border-zinc-200 hover:border-red-200 px-3 py-1 rounded-lg transition-all">Clear Spotify History</button>
-                        </div>
-                    </div>
-
-                    <!-- Playback Notice inside Spotify History -->
-                    <div class="bg-purple-50 border border-purple-200 p-4 rounded-xl flex items-start space-x-3 text-purple-900">
-                        <i data-lucide="info" class="w-5 h-5 text-purple-600 shrink-0 mt-0.5"></i>
-                        <div class="text-xs md:text-sm leading-relaxed">
-                            <span class="font-semibold block mb-0.5">Playback Notice</span>
-                            Due to browser security policies, loaded tracks and replay actions cannot start automatically. You will need to click the play button manually to begin playback.
-                        </div>
-                    </div>
-
-                    <div id="spotify-history-full-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="col-span-full bg-white border border-zinc-200 p-12 rounded-2xl text-center text-zinc-400 shadow-sm">
-                            <i data-lucide="music" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                            <p class="text-sm font-medium">No Spotify history recorded yet.</p>
-                            <p class="text-xs text-zinc-400 mt-1">Loaded Spotify links will appear here automatically.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Settings Content -->
-            <section id="content-settings" class="tab-content hidden space-y-6">
-                <div class="border-b border-zinc-200 pb-4">
-                    <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Platform Settings</h1>
-                    <p class="text-sm text-zinc-500 mt-1">Manage background particle displays.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-xl">
-                    <div class="bg-white border border-zinc-200 p-6 rounded-2xl shadow-sm space-y-5">
-                        <div class="flex items-center space-x-3 text-zinc-900 border-b border-zinc-100 pb-3">
-                            <i data-lucide="palette" class="w-5 h-5 text-purple-600"></i>
-                            <h2 class="font-medium">Background Particles</h2>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-sm font-medium text-zinc-800 block">Enable Purple Particles</span>
-                                    <span class="text-xs text-zinc-500">Shows floating purple particles on screen.</span>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="opt-particle-toggle" checked onchange="toggleParticles()" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end pt-4">
-                    <button onclick="saveSettings()" class="bg-purple-600 text-white font-medium px-6 py-2.5 text-sm rounded-xl hover:bg-purple-700 transition-all shadow-sm">
-                        Save All Preferences
-                    </button>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <!-- Scripting -->
+    <!-- JavaScript Logic -->
     <script>
-        lucide.createIcons();
+        // Check active session on load
+        let currentUser = localStorage.getItem('kimi_current_user');
 
-        function closeAnnouncement() {
-            document.getElementById('announcement-modal').classList.add('hidden');
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentUser) {
+                showChatScreen();
+            } else {
+                showAuthScreen();
+            }
+        });
+
+        function switchTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = "flex-1 pb-3 text-center font-semibold text-indigo-400 border-b-2 border-indigo-500 transition";
+                tabReg.className = "flex-1 pb-3 text-center font-semibold text-slate-400 border-b-2 border-transparent transition";
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = "flex-1 pb-3 text-center font-semibold text-cyan-400 border-b-2 border-cyan-500 transition";
+                tabLogin.className = "flex-1 pb-3 text-center font-semibold text-slate-400 border-b-2 border-transparent transition";
+            }
         }
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('kimi_users') || '{}');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const user = document.getElementById('reg-user').value.trim();
+            const pass = document.getElementById('reg-pass').value.trim();
+            const errorEl = document.getElementById('reg-error');
+
+            let users = getUsers();
+            if (users[user]) {
+                errorEl.textContent = "Username already exists.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            users[user] = pass;
+            localStorage.setItem('kimi_users', JSON.stringify(users));
             
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl border border-transparent transition-all shrink-0";
+            // Auto login after register
+            localStorage.setItem('kimi_current_user', user);
+            currentUser = user;
+            showChatScreen();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const errorEl = document.getElementById('login-error');
+
+            let users = getUsers();
+            if (!users[user] || users[user] !== pass) {
+                errorEl.textContent = "Invalid username or password.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            localStorage.setItem('kimi_current_user', user);
+            currentUser = user;
+            showChatScreen();
+        }
+
+        function logout() {
+            localStorage.removeItem('kimi_current_user');
+            currentUser = null;
+            showAuthScreen();
+        }
+
+        function showAuthScreen() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('chat-screen').classList.add('hidden');
+            document.getElementById('user-menu').classList.add('hidden');
+            // Reset forms
+            document.getElementById('login-form').reset();
+            document.getElementById('register-form').reset();
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('reg-error').classList.add('hidden');
+        }
+
+        function showChatScreen() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('user-menu').classList.remove('hidden');
+            document.getElementById('current-username').textContent = `Logged in as: ${currentUser}`;
+            loadMessages();
+        }
+
+        function getMessages() {
+            return JSON.parse(localStorage.getItem('kimi_messages') || '[]');
+        }
+
+        function loadMessages() {
+            const container = document.getElementById('message-container');
+            const messages = getMessages();
+            container.innerHTML = '';
+
+            if (messages.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-500 text-sm mt-10">No messages yet. Start the conversation!</div>`;
+                return;
+            }
+
+            messages.forEach(msg => {
+                const isMe = msg.user === currentUser;
+                const bubble = document.createElement('div');
+                bubble.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                
+                bubble.innerHTML = `
+                    <span class="text-[10px] text-slate-400 mb-0.5 px-1">${msg.user} &bull; ${msg.time}</span>
+                    <div class="max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700'}">${escapeHtml(msg.text)}</div>
+                `;
+                container.appendChild(bubble);
             });
 
-            if (tabName === 'dashboard') {
-                document.getElementById('content-dashboard').classList.remove('hidden');
-                document.getElementById('btn-dashboard').className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0";
-            } else if (tabName === 'stream') {
-                document.getElementById('content-stream').classList.remove('hidden');
-                document.getElementById('btn-stream').className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0";
-            } else if (tabName === 'spotify') {
-                document.getElementById('content-spotify').classList.remove('hidden');
-                document.getElementById('btn-spotify').className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0";
-            } else if (tabName === 'history') {
-                document.getElementById('content-history').classList.remove('hidden');
-                document.getElementById('btn-history').className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0";
-            } else if (tabName === 'settings') {
-                document.getElementById('content-settings').classList.remove('hidden');
-                document.getElementById('btn-settings').className = "tab-btn flex items-center space-x-2 px-3.5 py-2 text-sm font-medium bg-purple-50 text-purple-700 rounded-xl border border-purple-200 transition-all shadow-sm shrink-0";
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            container.scrollTop = container.scrollHeight;
         }
 
-        // Initialize history from localStorage or default to empty arrays
-        let streamHistory = JSON.parse(localStorage.getItem('kimi_stream_history')) || [];
-        let spotifyHistory = JSON.parse(localStorage.getItem('kimi_spotify_history')) || [];
+        function handleSendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
 
-        // Render history on page load
-        renderHistory();
-        renderSpotifyHistory();
-
-        async function loadCustomVideo() {
-            const inputElement = document.getElementById('video-url-input');
-            const inputVal = inputElement.value.trim();
-            if (!inputVal) return;
-
-            // Intercept accidental Spotify links in the YouTube input
-            if (inputVal.includes('spotify.com') || inputVal.includes('open.spotify.com')) {
-                inputElement.value = '';
-                switchTab('spotify');
-                document.getElementById('spotify-url-input').value = inputVal;
-                loadCustomSpotify();
-                return;
-            }
-
-            let videoId = '';
-            if (inputVal.includes('youtu.be/')) {
-                videoId = inputVal.split('youtu.be/')[1]?.split('?')[0];
-            } else if (inputVal.includes('watch?v=')) {
-                videoId = inputVal.split('watch?v=')[1]?.split('&')[0];
-            } else if (inputVal.includes('embed/')) {
-                videoId = inputVal.split('embed/')[1]?.split('?')[0];
-            } else {
-                videoId = inputVal;
-            }
-
-            if (videoId) {
-                playVideoById(videoId);
-            } else {
-                alert('Please enter a valid YouTube link or video ID.');
-            }
-        }
-
-        async function playVideoById(videoId) {
-            const playerContainer = document.getElementById('player-container');
-
-            playerContainer.innerHTML = `
-                <iframe 
-                    class="absolute top-0 left-0 w-full h-full"
-                    src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&modestbranding=1" 
-                    title="Ad-free Stream Player" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
-            `;
-
-            switchTab('stream');
-
-            let channelName = "YouTube Creator";
-            let videoTitle = "Stream Video " + videoId;
-            let thumbnailURL = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-
-            try {
-                const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
-                const data = await res.json();
-                if (data.author_name) channelName = data.author_name;
-                if (data.title) videoTitle = data.title;
-            } catch (e) {
-                // Fallback default values
-            }
-
-            const banner = document.getElementById('active-media-banner');
-            const bannerThumb = document.getElementById('banner-thumb');
-            const bannerTitle = document.getElementById('banner-title');
-            const bannerCreator = document.getElementById('banner-creator');
-
-            bannerThumb.src = thumbnailURL;
-            bannerTitle.innerText = videoTitle;
-            bannerCreator.innerText = channelName;
-            banner.classList.remove('hidden');
-
-            addHistoryItem(videoId, channelName, videoTitle, thumbnailURL);
-        }
-
-        async function loadCustomSpotify() {
-            const inputVal = document.getElementById('spotify-url-input').value.trim();
-            if (!inputVal) return;
-
-            let embedUrl = '';
-            let rawShareUrl = inputVal.split('?')[0];
-            if (inputVal.includes('spotify.com/')) {
-                const parts = rawShareUrl.split('spotify.com/');
-                if (parts[1]) {
-                    embedUrl = `https://open.spotify.com/embed/${parts[1]}`;
-                }
-            }
-
-            if (embedUrl) {
-                playSpotifyByUrl(embedUrl, rawShareUrl);
-            } else {
-                alert('Please enter a valid Spotify share link.');
-            }
-        }
-
-        async function playSpotifyByUrl(embedUrl, rawUrl) {
-            let baseUrl = embedUrl.split('?')[0];
-            let finalUrl = `${baseUrl}?utm_source=generator&theme=0`;
-
-            const iframe = document.getElementById('spotify-iframe');
-            const emptyState = document.getElementById('spotify-empty-state');
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const messages = getMessages();
             
-            if (iframe && emptyState) {
-                emptyState.classList.add('hidden');
-                iframe.classList.remove('hidden');
-                iframe.src = finalUrl;
-            }
+            messages.push({ user: currentUser, text: text, time: time });
+            localStorage.setItem('kimi_messages', JSON.stringify(messages));
 
-            switchTab('spotify');
-
-            let trackTitle = "Spotify Track / Playlist";
-            let artistName = "Kimi Admin"; 
-            let thumbnailURL = "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=400&auto=format&fit=crop&q=80";
-
-            try {
-                const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(rawUrl)}`);
-                const data = await res.json();
-                if (data.title) trackTitle = data.title;
-                if (data.author_name) artistName = data.author_name;
-                if (data.thumbnail_url) thumbnailURL = data.thumbnail_url;
-            } catch (e) {
-                if (rawUrl.includes('/track/')) {
-                    trackTitle = "Spotify Track (" + rawUrl.split('/track/')[1].split('/')[0] + ")";
-                } else if (rawUrl.includes('/playlist/')) {
-                    trackTitle = "Spotify Playlist (" + rawUrl.split('/playlist/')[1].split('/')[0] + ")";
-                } else if (rawUrl.includes('/album/')) {
-                    trackTitle = "Spotify Album (" + rawUrl.split('/album/')[1].split('/')[0] + ")";
-                }
-            }
-
-            // Update Spotify Active Banner UI with admin badge support
-            const banner = document.getElementById('spotify-active-media-banner');
-            const bannerThumb = document.getElementById('spotify-banner-thumb');
-            const bannerTitle = document.getElementById('spotify-banner-title');
-            const bannerCreator = document.getElementById('spotify-banner-creator');
-
-            bannerThumb.src = thumbnailURL;
-            bannerTitle.innerText = trackTitle;
-            bannerCreator.innerText = artistName;
-            banner.classList.remove('hidden');
-
-            addSpotifyHistoryItem(baseUrl, trackTitle, artistName, thumbnailURL, rawUrl);
+            input.value = '';
+            loadMessages();
         }
 
-        function addHistoryItem(videoId, channel, title, thumb) {
-            streamHistory = streamHistory.filter(item => item.id !== videoId);
-            streamHistory.unshift({ id: videoId, channel, title, thumb, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-            localStorage.setItem('kimi_stream_history', JSON.stringify(streamHistory));
-            renderHistory();
-        }
-
-        function addSpotifyHistoryItem(embedUrl, title, artist, thumb, rawUrl) {
-            spotifyHistory = spotifyHistory.filter(item => item.embedUrl !== embedUrl);
-            spotifyHistory.unshift({ embedUrl, title, artist, thumb, rawUrl, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-            localStorage.setItem('kimi_spotify_history', JSON.stringify(spotifyHistory));
-            renderSpotifyHistory();
-        }
-
-        function clearHistory(type) {
-            if (type === 'stream') {
-                streamHistory = [];
-                localStorage.removeItem('kimi_stream_history');
-                renderHistory();
-            } else if (type === 'spotify') {
-                spotifyHistory = [];
-                localStorage.removeItem('kimi_spotify_history');
-                renderSpotifyHistory();
-            }
-        }
-
-        function renderHistory() {
-            const container = document.getElementById('history-full-list');
-            const badge = document.getElementById('history-count-badge');
-            
-            badge.innerText = `${streamHistory.length} stream${streamHistory.length === 1 ? '' : 's'} logged`;
-
-            if (streamHistory.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full bg-white border border-zinc-200 p-12 rounded-2xl text-center text-zinc-400 shadow-sm">
-                        <i data-lucide="history" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                        <p class="text-sm font-medium">No history recorded yet.</p>
-                        <p class="text-xs text-zinc-400 mt-1">Watched streams will appear here automatically.</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            container.innerHTML = streamHistory.map(item => `
-                <div class="bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm flex items-center space-x-4">
-                    <img src="${item.thumb}" class="w-24 h-16 object-cover rounded-xl border border-zinc-100 shrink-0" alt="Thumbnail">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-sm font-medium text-zinc-900 truncate">${item.title}</h4>
-                        <p class="text-xs text-zinc-500 truncate mt-0.5">${item.channel} • ${item.time}</p>
-                    </div>
-                    <button onclick="playVideoById('${item.id}')" class="bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-3.5 py-2 rounded-xl text-xs font-medium transition-all shrink-0">
-                        Replay
-                    </button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function renderSpotifyHistory() {
-            const container = document.getElementById('spotify-history-full-list');
-            const badge = document.getElementById('spotify-history-count-badge');
-            
-            badge.innerText = `${spotifyHistory.length} track${spotifyHistory.length === 1 ? '' : 's'} logged`;
-
-            if (spotifyHistory.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full bg-white border border-zinc-200 p-12 rounded-2xl text-center text-zinc-400 shadow-sm">
-                        <i data-lucide="music" class="w-10 h-10 mx-auto mb-2 opacity-40"></i>
-                        <p class="text-sm font-medium">No Spotify history recorded yet.</p>
-                        <p class="text-xs text-zinc-400 mt-1">Loaded Spotify links will appear here automatically.</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            container.innerHTML = spotifyHistory.map(item => `
-                <div class="bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm flex items-center space-x-4">
-                    <img src="${item.thumb}" class="w-24 h-16 object-cover rounded-xl border border-zinc-100 shrink-0" alt="Spotify Art">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-sm font-medium text-zinc-900 truncate">${item.title}</h4>
-                        <div class="flex items-center space-x-1.5 mt-0.5">
-                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
-                            <p class="text-xs font-medium text-purple-700">${item.artist} • ${item.time}</p>
-                        </div>
-                    </div>
-                    <button onclick="playSpotifyByUrl('${item.embedUrl}', '${item.rawUrl}')" class="bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-3.5 py-2 rounded-xl text-xs font-medium transition-all shrink-0">
-                        Replay
-                    </button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        // Particle Canvas Animation Logic (Increased Density)
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let particlesEnabled = true;
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Increased particle count from 40 to 120 for a much denser background effect
-        for (let i = 0; i < 120; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radius: Math.random() * 2 + 1,
-                speedY: -(Math.random() * 0.4 + 0.2),
-                speedX: (Math.random() - 0.5) * 0.3,
-                opacity: Math.random() * 0.5 + 0.2
-            });
-        }
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (particlesEnabled) {
-                particles.forEach(p => {
-                    p.y += p.speedY;
-                    p.x += p.speedX;
-
-                    if (p.y < 0) p.y = canvas.height + 10;
-                    if (p.x < 0) p.x = canvas.width;
-                    if (p.x > canvas.width) p.x = 0;
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(147, 51, 234, ${p.opacity})`;
-                    ctx.fill();
-                });
-            }
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
-
-        function toggleParticles() {
-            particlesEnabled = document.getElementById('opt-particle-toggle').checked;
-        }
-
-        function saveSettings() {
-            alert('Settings saved successfully!');
+        // Basic safety against HTML injection in chats
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
     </script>
 </body>
